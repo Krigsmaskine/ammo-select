@@ -8,11 +8,10 @@ Hooks.once('ready', async function () {
   ui.notifications.info("Test loaded.")
 });
 
-Hooks.once('setup', () => {
-  async function ammoFunction(wrapped, ...args) {
-    if (this.system.properties?.amm === true && this.type == "weapon") {
+Hooks.on("dnd5e.preUseItem", async (item, config, options) => {
+    if (item.system.properties?.amm === true && item.type == "weapon") {
       let id = 'ammo-select';
-      let options = this.actor.items.filter(i => i.type === "consumable" && i.system.consumableType === "ammo" && i.flags?.["ammo-select"]?.ammoType === this.flags?.["ammo-select"]?.ammoType && i.flags?.["ammo-select"]?.ammoType).sort((a, b) => a.name.localeCompare(b.name)).map((item) => {
+      let options = item.actor.items.filter(i => i.type === "consumable" && i.system.consumableType === "ammo" && i.flags?.["ammo-select"]?.ammoType === item.flags?.["ammo-select"]?.ammoType && i.flags?.["ammo-select"]?.ammoType).sort((a, b) => a.name.localeCompare(b.name)).map((item) => {
         let isDisabled = item.system.quantity === 0;
         return {
           name: item.name,
@@ -25,16 +24,16 @@ Hooks.once('setup', () => {
                 <span>(${item.system.quantity})</span>
               </div>`,
           callback: isDisabled ? null : async () => {
-            return await this.update({ "system.consume.target": item.id });
+            return await item.update({ "system.consume.target": item.id });
           },
           disabled: isDisabled
         }
       });
-      if (!options.length) return await wrapped(...args);
+      if (!options.length) return true;
       let buttons = {};
       for (let o of options) buttons[o.name.slugify()] = o;
       await Dialog.wait({
-        title: `Select ammunition for ${this.name}`,
+        title: `Select ammunition for ${item.name}`,
         buttons,
         content: `<style>
                       #${id} {
@@ -61,11 +60,9 @@ Hooks.once('setup', () => {
                     </style>`
       }, { id });
     };
-    let result = await wrapped(...args)
-    return result
+    return true
   }
-  libWrapper.register("ammo-select", "CONFIG.Item.documentClass.prototype.use", ammoFunction, "MIXED");
-})
+);
 
 Hooks.on("renderItemSheet5e", async (sheet, html, item) => {
   // Adding ammunition use dropdown on weapons.
