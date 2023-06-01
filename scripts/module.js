@@ -12,7 +12,7 @@ Hooks.once('setup', () => {
   async function ammoFunction(wrapped, ...args) {
     if (this.system.properties?.amm === true && this.type == "weapon") {
       let id = 'ammo-select';
-      let options = this.actor.items.filter(i => i.type == "consumable" && i.system.consumableType == "ammo" && i.flags?.["ammo-select"]?.ammoType == this.flags?.["ammo-select"].ammoType).sort((a, b) => a.name.localeCompare(b.name)).map((item) => {
+      let options = this.actor.items.filter(i => i.type === "consumable" && i.system.consumableType === "ammo" && i.flags?.["ammo-select"]?.ammoType === this.flags?.["ammo-select"]?.ammoType && i.flags?.["ammo-select"]?.ammoType).sort((a, b) => a.name.localeCompare(b.name)).map((item) => {
         let isDisabled = item.system.quantity === 0;
         return {
           name: item.name,
